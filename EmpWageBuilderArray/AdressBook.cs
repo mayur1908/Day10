@@ -138,28 +138,16 @@ namespace AddressBook
             }
         }
 
-        // Method to find a contact in an address book
+        // Helper method to find a contact in an address book
         private Contact FindContact(string addressBookName, string firstName, string lastName)
         {
-            // If the address book doesn't exist, return null
-            if (!addressBooks.ContainsKey(addressBookName))
+            if (addressBooks.ContainsKey(addressBookName))
             {
-                Console.WriteLine("Address book not found.");
-                return null;
+                List<Contact> contacts = addressBooks[addressBookName];
+                return contacts.Find(c => c.FirstName == firstName && c.LastName == lastName);
             }
 
-            // Search for the contact in the address book
-            foreach (Contact contact in addressBooks[addressBookName])
-            {
-                if (contact.FirstName == firstName && contact.LastName == lastName)
-                {
-                    return contact;
-                }
-            }
-
-            Console.WriteLine("Contact not found.");
             return null;
         }
     }
-
 }
