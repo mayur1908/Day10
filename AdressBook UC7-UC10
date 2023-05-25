@@ -1,0 +1,561 @@
+using System;
+using System.Collections.Generic;
+
+namespace AddressBook
+{
+    class ContactPerson
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string Zip { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            ContactPerson other = (ContactPerson)obj;
+            return FirstName.Equals(other.FirstName, StringComparison.OrdinalIgnoreCase) &&
+                   LastName.Equals(other.LastName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override int GetHashCode()
+        {
+            return FirstName.GetHashCode() ^ LastName.GetHashCode();
+        }
+    }
+
+    class AddressBook
+    {
+        private List<ContactPerson> contacts;
+        private Dictionary<string, List<ContactPerson>> cityDictionary;
+        private Dictionary<string, List<ContactPerson>> stateDictionary;
+
+        public AddressBook()
+        {
+            contacts = new List<ContactPerson>();
+            cityDictionary = new Dictionary<string, List<ContactPerson>>();
+            stateDictionary = new Dictionary<string, List<ContactPerson>>();
+        }
+
+        public void AddContact(ContactPerson contact)
+        {
+            if (!contacts.Contains(contact))
+            {
+                contacts.Add(contact);
+                UpdateCityDictionary(contact.City, contact);
+                UpdateStateDictionary(contact.State, contact);
+                Console.WriteLine("Contact added successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Duplicate entry found. Contact not added.");
+            }
+        }
+
+        public void EditContact(string firstName, string lastName)
+        {
+            ContactPerson contact = FindContact(firstName, lastName);
+            if (contact != null)
+            {
+                // Prompt the user to edit the contact details
+                Console.WriteLine("Enter the new details for the contact:");
+                Console.Write("First Name: ");
+                contact.FirstName = Console.ReadLine();
+                Console.Write("Last Name: ");
+                contact.LastName = Console.ReadLine();
+                Console.Write("Address: ");
+                contact.Address = Console.ReadLine();
+                Console.Write("City: ");
+                contact.City = Console.ReadLine();
+                Console.Write("State: ");
+                contact.State = Console.ReadLine();
+                Console.Write("Zip: ");
+                contact.Zip = Console.ReadLine();
+                Console.Write("Phone Number: ");
+                contact.PhoneNumber = Console.ReadLine();
+                Console.Write("Email: ");
+                contact.Email = Console.ReadLine();
+                Console.WriteLine("Contact updated successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Contact not found.");
+            }
+        }
+
+        public void DeleteContact(string firstName, string lastName)
+        {
+            ContactPerson contact = FindContact(firstName, lastName);
+            if (contact != null)
+            {
+                contacts.Remove(contact);
+                RemoveFromCityDictionary(contact.City, contact);
+                RemoveFromStateDictionary(contact.State, contact);
+                Console.WriteLine("Contact deleted successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Contact not found.");
+            }
+        }
+
+        public List<ContactPerson> SearchByCity(string city)
+        {
+            if (cityDictionary.ContainsKey(city))
+            {
+                return cityDictionary[city];
+            }
+            else
+            {
+                Console.WriteLine("No contacts found in the given city.");
+                return new List<ContactPerson>();
+            }
+        }
+
+        public List<ContactPerson> SearchByState(string state)
+        {
+            if (stateDictionary.ContainsKey(state))
+            {
+                return stateDictionary[state];
+            }
+            else
+            {
+                Console.WriteLine("No contacts found in the given state.");
+                return new List<ContactPerson>();
+            }
+        }
+
+        public int GetCountByCity(string city)
+        {
+            if (cityDictionary.ContainsKey(city))
+            {
+                return cityDictionary[city].Count;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public int GetCountByState(string state)
+        {
+            if (stateDictionary.ContainsKey(state))
+            {
+                return stateDictionary[state].Count;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private void UpdateCityDictionary(string city, ContactPerson contact)
+        {
+            if (cityDictionary.ContainsKey(city))
+            {
+                cityDictionary[city].Add(contact);
+            }
+            else
+            {
+                List<ContactPerson> contactList = new List<ContactPerson>();
+                contactList.Add(contact);
+                cityDictionary.Add(city, contactList);
+            }
+        }
+
+        private void UpdateStateDictionary(string state, ContactPerson contact)
+        {
+            if (stateDictionary.ContainsKey(state))
+            {
+                stateDictionary[state].Add(contact);
+            }
+            else
+            {
+                List<ContactPerson> contactList = new List<ContactPerson>();
+                contactList.Add(contact);
+                stateDictionary.Add(state, contactList);
+            }
+        }
+
+        private void RemoveFromCityDictionary(string city, ContactPerson contact)
+        {
+            if (cityDictionary.ContainsKey(city))
+            {
+                cityDictionary[city].Remove(contact);
+            }
+        }
+
+        private void RemoveFromStateDictionary(string state, ContactPerson contact)
+        {
+            if (stateDictionary.ContainsKey(state))
+            {
+                stateDictionary[state].Remove(contact);
+            }
+        }
+
+        private ContactPerson FindContact(string firstName, string lastName)
+        {
+            foreach (ContactPerson contact in contacts)
+            {
+                if (contact.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
+                    contact.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return contact;
+                }
+            }
+            return null;
+        }
+    }
+
+    class Program
+    {
+        private static Dictionary<string, AddressBook> addressBooks;
+
+        static void Main(string[] args)
+        {
+            addressBooks = new Dictionary<string, AddressBook>();
+            bool isRunning = true;
+
+            while (isRunning)
+            {
+                Console.WriteLine("Welcome to Address Book");
+                Console.WriteLine("1. Add a new contact");
+                Console.WriteLine("2. Edit an existing contact");
+                Console.WriteLine("3. Delete a contact");
+                Console.WriteLine("4. Add multiple contacts");
+                Console.WriteLine("5. Add a new address book");
+                Console.WriteLine("6. Check for duplicate entries");
+                Console.WriteLine("7. Search contacts by city");
+                Console.WriteLine("8. Search contacts by state");
+                Console.WriteLine("9. View contacts count by city");
+                Console.WriteLine("10. View contacts count by state");
+                Console.WriteLine("11. Exit");
+
+                Console.Write("Enter your choice: ");
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                switch (choice)
+                {
+                    case 1:
+                        AddContact();
+                        break;
+                    case 2:
+                        EditContact();
+                        break;
+                    case 3:
+                        DeleteContact();
+                        break;
+                    case 4:
+                        AddMultipleContacts();
+                        break;
+                    case 5:
+                        AddAddressBook();
+                        break;
+                    case 6:
+                        CheckDuplicates();
+                        break;
+                    case 7:
+                        SearchByCity();
+                        break;
+                    case 8:
+                        SearchByState();
+                        break;
+                    case 9:
+                        CountByCity();
+                        break;
+                    case 10:
+                        CountByState();
+                        break;
+                    case 11:
+                        isRunning = false;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid choice. Please try again.");
+                        break;
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+        private static void AddContact()
+        {
+            Console.WriteLine("Enter contact details:");
+            Console.Write("First Name: ");
+            string firstName = Console.ReadLine();
+            Console.Write("Last Name: ");
+            string lastName = Console.ReadLine();
+            Console.Write("Address: ");
+            string address = Console.ReadLine();
+            Console.Write("City: ");
+            string city = Console.ReadLine();
+            Console.Write("State: ");
+            string state = Console.ReadLine();
+            Console.Write("Zip: ");
+            string zip = Console.ReadLine();
+            Console.Write("Phone Number: ");
+            string phoneNumber = Console.ReadLine();
+            Console.Write("Email: ");
+            string email = Console.ReadLine();
+
+            ContactPerson contact = new ContactPerson()
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Address = address,
+                City = city,
+                State = state,
+                Zip = zip,
+                PhoneNumber = phoneNumber,
+                Email = email
+            };
+
+            Console.Write("Enter the address book name: ");
+            string addressBookName = Console.ReadLine();
+
+            if (addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = addressBooks[addressBookName];
+                addressBook.AddContact(contact);
+            }
+            else
+            {
+                Console.WriteLine("Address book not found.");
+            }
+        }
+
+        private static void EditContact()
+        {
+            Console.Write("Enter the first name of the contact: ");
+            string firstName = Console.ReadLine();
+            Console.Write("Enter the last name of the contact: ");
+            string lastName = Console.ReadLine();
+
+            Console.Write("Enter the address book name: ");
+            string addressBookName = Console.ReadLine();
+
+            if (addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = addressBooks[addressBookName];
+                addressBook.EditContact(firstName, lastName);
+            }
+            else
+            {
+                Console.WriteLine("Address book not found.");
+            }
+        }
+
+        private static void DeleteContact()
+        {
+            Console.Write("Enter the first name of the contact: ");
+            string firstName = Console.ReadLine();
+            Console.Write("Enter the last name of the contact: ");
+            string lastName = Console.ReadLine();
+
+            Console.Write("Enter the address book name: ");
+            string addressBookName = Console.ReadLine();
+
+            if (addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = addressBooks[addressBookName];
+                addressBook.DeleteContact(firstName, lastName);
+            }
+            else
+            {
+                Console.WriteLine("Address book not found.");
+            }
+        }
+
+        private static void AddMultipleContacts()
+        {
+            Console.Write("Enter the address book name: ");
+            string addressBookName = Console.ReadLine();
+
+            if (addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = addressBooks[addressBookName];
+
+                Console.WriteLine("Enter the number of contacts to add:");
+                int count = Convert.ToInt32(Console.ReadLine());
+
+                for (int i = 0; i < count; i++)
+                {
+                    Console.WriteLine("Enter contact details:");
+                    Console.Write("First Name: ");
+                    string firstName = Console.ReadLine();
+                    Console.Write("Last Name: ");
+                    string lastName = Console.ReadLine();
+                    Console.Write("Address: ");
+                    string address = Console.ReadLine();
+                    Console.Write("City: ");
+                    string city = Console.ReadLine();
+                    Console.Write("State: ");
+                    string state = Console.ReadLine();
+                    Console.Write("Zip: ");
+                    string zip = Console.ReadLine();
+                    Console.Write("Phone Number: ");
+                    string phoneNumber = Console.ReadLine();
+                    Console.Write("Email: ");
+                    string email = Console.ReadLine();
+
+                    ContactPerson contact = new ContactPerson()
+                    {
+                        FirstName = firstName,
+                        LastName = lastName,
+                        Address = address,
+                        City = city,
+                        State = state,
+                        Zip = zip,
+                        PhoneNumber = phoneNumber,
+                        Email = email
+                    };
+
+                    addressBook.AddContact(contact);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Address book not found.");
+            }
+        }
+
+        private static void AddAddressBook()
+        {
+            Console.Write("Enter the name of the new address book: ");
+            string addressBookName = Console.ReadLine();
+
+            if (!addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = new AddressBook();
+                addressBooks.Add(addressBookName, addressBook);
+                Console.WriteLine("Address book added successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Address book already exists.");
+            }
+        }
+
+        private static void CheckDuplicates()
+        {
+            Console.Write("Enter the address book name: ");
+            string addressBookName = Console.ReadLine();
+
+            if (addressBooks.ContainsKey(addressBookName))
+            {
+                AddressBook addressBook = addressBooks[addressBookName];
+                Console.Write("Enter the first name of the contact: ");
+                string firstName = Console.ReadLine();
+                Console.Write("Enter the last name of the contact: ");
+                string lastName = Console.ReadLine();
+
+                ContactPerson contact = new ContactPerson()
+                {
+                    FirstName = firstName,
+                    LastName = lastName
+                };
+
+                if (addressBook.Contacts.Contains(contact))
+                {
+                    Console.WriteLine("Duplicate entry found in the address book.");
+                }
+                else
+                {
+                    Console.WriteLine("No duplicate entry found in the address book.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Address book not found.");
+            }
+        }
+
+        private static void SearchByCity()
+        {
+            Console.Write("Enter the city to search: ");
+            string city = Console.ReadLine();
+
+            List<ContactPerson> result = new List<ContactPerson>();
+
+            foreach (var addressBook in addressBooks.Values)
+            {
+                result.AddRange(addressBook.SearchByCity(city));
+            }
+
+            if (result.Count > 0)
+            {
+                Console.WriteLine("Search results:");
+                foreach (var contact in result)
+                {
+                    Console.WriteLine($"Name: {contact.FirstName} {contact.LastName}, Address: {contact.Address}, City: {contact.City}, State: {contact.State}, Zip: {contact.Zip}, Phone: {contact.PhoneNumber}, Email: {contact.Email}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No contacts found in the given city.");
+            }
+        }
+
+        private static void SearchByState()
+        {
+            Console.Write("Enter the state to search: ");
+            string state = Console.ReadLine();
+
+            List<ContactPerson> result = new List<ContactPerson>();
+
+            foreach (var addressBook in addressBooks.Values)
+            {
+                result.AddRange(addressBook.SearchByState(state));
+            }
+
+            if (result.Count > 0)
+            {
+                Console.WriteLine("Search results:");
+                foreach (var contact in result)
+                {
+                    Console.WriteLine($"Name: {contact.FirstName} {contact.LastName}, Address: {contact.Address}, City: {contact.City}, State: {contact.State}, Zip: {contact.Zip}, Phone: {contact.PhoneNumber}, Email: {contact.Email}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No contacts found in the given state.");
+            }
+        }
+
+        private static void CountByCity()
+        {
+            Console.Write("Enter the city to get the count: ");
+            string city = Console.ReadLine();
+
+            int count = 0;
+
+            foreach (var addressBook in addressBooks.Values)
+            {
+                count += addressBook.GetCountByCity(city);
+            }
+
+            Console.WriteLine($"Number of contacts in the city: {count}");
+        }
+
+        private static void CountByState()
+        {
+            Console.Write("Enter the state to get the count: ");
+            string state = Console.ReadLine();
+
+            int count = 0;
+
+            foreach (var addressBook in addressBooks.Values)
+            {
+                count += addressBook.GetCountByState(state);
+            }
+
+            Console.WriteLine($"Number of contacts in the state: {count}");
+        }
+    }
+}
